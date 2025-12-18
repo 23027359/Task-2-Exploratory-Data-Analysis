@@ -1,0 +1,74 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load the Titanic dataset (standard public source)
+df = pd.read_csv('https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv')
+
+# Data Cleaning
+# Handle missing values
+df['Age'].fillna(df['Age'].median(), inplace=True)
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+df['HasCabin'] = df['Cabin'].apply(lambda x: 0 if pd.isna(x) else 1)
+df.drop('Cabin', axis=1, inplace=True)
+
+# Feature Engineering
+df['FamilySize'] = df['SibSp'] + df['Parch'] + 1
+df['IsAlone'] = (df['FamilySize'] == 1).astype(int)
+df['Title'] = df['Name'].str.extract(' ([A-Za-z]+)\.', expand=False)
+df['Title'] = df['Title'].replace(['Lady', 'Countess','Capt', 'Col','Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer', 'Dona'], 'Rare')
+df['Title'] = df['Title'].replace(['Mlle', 'Ms'], 'Miss')
+df['Title'] = df['Title'].replace('Mme', 'Mrs')
+
+# Drop unnecessary columns
+df.drop(['PassengerId', 'Name', 'Ticket'], axis=1, inplace=True)
+
+# Encode categorical variables
+df['Sex'] = df['Sex'].map({'male': 0, 'female': 1})
+df['Embarked'] = df['Embarked'].map({'S': 0, 'C': 1, 'Q': 2})
+
+# Visualizations (save as PNG files)
+sns.set(style="whitegrid")
+
+# 1. Survival Count
+plt.figure(figsize=(8,6))
+sns.countplot(x='Survived', data=df)
+plt.title('Survival Count (0 = No, 1 = Yes)')
+plt.savefig('survival_count.png', dpi=300)
+plt.close()
+
+# 2. Survival by Sex
+plt.figure(figsize=(8,6))
+sns.barplot(x='Sex', y='Survived', data=df)
+plt.title('Survival Rate by Sex')
+plt.savefig('survival_by_sex.png', dpi=300)
+plt.close()
+
+# 3. Survival by Pclass
+plt.figure(figsize=(8,6))
+sns.barplot(x='Pclass', y='Survived', data=df)
+plt.title('Survival Rate by Passenger Class')
+plt.savefig('survival_by_pclass.png', dpi=300)
+plt.close()
+
+# 4. Age Distribution by Survival
+plt.figure(figsize=(10,6))
+sns.histplot(data=df, x='Age', hue='Survived', kde=True, bins=30)
+plt.title('Age Distribution by Survival')
+plt.savefig('age_distribution.png', dpi=300)
+plt.close()
+
+# 5. Fare Distribution by Survival
+plt.figure(figsize=(10,6))
+sns.histplot(data=df, x='Fare', hue='Survived', kde=True, bins=30)
+plt.title('Fare Distribution by Survival')
+plt.savefig('fare_distribution.png', dpi=300)
+plt.close()
+
+# 6. Correlation Heatmap
+plt.figure(figsize=(12,8))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.savefig('correlation_heatmap.png', dpi=300)
+plt.close()
